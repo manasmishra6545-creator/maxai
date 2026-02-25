@@ -33,6 +33,18 @@ export async function generateAIResponse(prompt) {
         return response.text();
     } catch (error) {
         console.error("Error calling Gemini API:", error);
-        return `**Error:** An issue occurred while contacting my brain. \n\nDetails: _${error.message}_`;
+
+        // Add specific troubleshooting for Vercel
+        let errorMessage = `**Error:** An issue occurred while contacting my brain. \n\nDetails: _${error.message}_\n\n`;
+
+        if (error.message.includes("API key not valid") || error.message.includes("API_KEY_INVALID")) {
+            errorMessage += "**Troubleshooting:**\n1. It looks like your API key might be invalid. Please check that you copied the exact, full key from Google AI Studio.\n2. In Vercel, go to Settings -> Environment Variables, delete the old `VITE_GEMINI_API_KEY`, and add the new one.\n3. **CRITICAL:** Go to Deployments -> click the three dots (`...`) -> **Redeploy**. Environment variables won't take effect until you redeploy!";
+        } else if (error.message.includes("fetch") || error.message.includes("Network")) {
+            errorMessage += "**Troubleshooting:** This seems to be a network error. Are you connected to the internet, or is a firewall blocking the request?";
+        } else {
+            errorMessage += "**Troubleshooting:**\n1. Did you add `VITE_GEMINI_API_KEY` to your Vercel Environment Variables exactly as typed here?\n2. **CRITICAL:** Did you click **Redeploy** on the Vercel Deployments tab after adding the key? Just adding the variable isn't enough; Vercel must rebuild the app.\n3. Make sure you don't have any extra spaces before or after your key in Vercel.";
+        }
+
+        return errorMessage;
     }
 }
